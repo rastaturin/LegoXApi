@@ -1,0 +1,64 @@
+import datetime
+import time
+import secrets
+
+from chalicelib.dynamodb import DynamoDb
+from chalicelib.exceptions import NotFoundException
+
+class AbstractRepository:
+    PREFIX = "LEGOX"
+
+    def __init__(self):
+        table_name = self.PREFIX + '_' + self.get_table_name()
+        self.db = DynamoDb(table_name)
+
+    def get_table_name(self):
+        raise NotImplementedError
+
+    def insert(self, item, uniq_attr=None):
+
+        if 'createdAt' not in item:
+            item['createdAt'] = str(datetime.datetime.now())
+        item['updatedAt'] = str(datetime.datetime.now())
+        return self.db.insert_item(item, uniq_attr)
+
+    def get(self, query):
+        return self.db.get_item(query)
+
+    def query(self, key, value, index=None, limit=0, key_sort=None, value_sort=None):
+        result = self.db.query(key, value, index, limit, key_sort, value_sort)
+        if result['Count'] == 0:
+            return []
+        return result['Items']
+
+    def scan(self):
+        result = self.db.scan()
+        if result['Count'] == 0:
+            return []
+        return result['Items']
+
+
+class UserRepository(AbstractRepository):
+    def get_table_name(self):
+        return 'users'
+
+    def reg_user(self, email):
+        return self.db.insert_item({'email': email})
+
+
+class AuthcodesRepository(AbstractRepository):
+    def get_table_name(self):
+        return 'authcodes'
+
+    def add_code(self, email):
+        code = secrets.token_hex(16)
+        expires = time.time() + datetime.timedelta(days=7).total_seconds()
+        self.insert({'code': code, 'expires': int(expires), 'email': email})
+        return code
+
+    def get_email(self, code):
+        result = self.query('code', code)
+        if len(result) == 0:
+            raise NotFoundException('Code not found')
+        return result[0].get('email')
+
