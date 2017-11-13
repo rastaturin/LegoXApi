@@ -5,6 +5,7 @@ import secrets
 from chalicelib.dynamodb import DynamoDb
 from chalicelib.exceptions import NotFoundException
 
+
 class AbstractRepository:
     PREFIX = "LEGOX"
 
@@ -43,7 +44,7 @@ class UserRepository(AbstractRepository):
         return 'users'
 
     def reg_user(self, email):
-        return self.db.insert_item({'email': email})
+        return self.insert({'email': email})
 
 
 class AuthcodesRepository(AbstractRepository):

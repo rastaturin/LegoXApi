@@ -9,7 +9,7 @@ from botocore.exceptions import ClientError
 
 class DynamoDb:
     def __init__(self, table):
-        self.dynamo_db = boto3.resource('dynamodb', region_name='us-west-1')
+        self.dynamo_db = boto3.resource('dynamodb', region_name='us-west-2')
         self.table = self.dynamo_db.Table(table)
         pass
 

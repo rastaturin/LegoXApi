@@ -48,10 +48,8 @@ def require_user(f):
     return decorated
 
 
-@app.route('/sessionkey', methods=['POST'], cors=True)
-def sessionkey():
-    email = str(app.current_request.json_body.get('email', ''))
-
+@app.route('/login/{email}', methods=['GET'], cors=True)
+def sessionkey(email):
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         raise InvalidUsage('Invalid Email')
 
