@@ -19,6 +19,6 @@ class UserService:
             email = self.auth_repo.get_email(code)
         except NotFoundException:
             raise TokenExpired('Token expired')
-        return self.user_repo.get_user(email)
+        return self.user_repo.get({'email': email})
 
 

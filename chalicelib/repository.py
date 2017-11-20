@@ -26,6 +26,9 @@ class AbstractRepository:
     def get(self, query):
         return self.db.get_item(query)
 
+    def remove(self, query):
+        self.db.del_item(query)
+
     def query(self, key, value, index=None, limit=0, key_sort=None, value_sort=None):
         result = self.db.query(key, value, index, limit, key_sort, value_sort)
         if result['Count'] == 0:
@@ -37,6 +40,30 @@ class AbstractRepository:
         if result['Count'] == 0:
             return []
         return result['Items']
+
+
+class ThemesRepository(AbstractRepository):
+    def get_table_name(self):
+        return 'themes'
+
+
+class MysetsRepository(AbstractRepository):
+    def get_table_name(self):
+        return 'mysets'
+
+
+class SetsRepository(AbstractRepository):
+    def get_table_name(self):
+        return 'sets'
+
+    def search_year(self, year, limit):
+        return self.query('year', year, 'year-theme-index', limit)
+
+    def search_theme(self, theme, limit):
+        return self.query('theme', theme, 'theme-index', limit)
+
+    def search(self, year, theme, limit):
+        return self.query('year', year, 'year-theme-index', limit, 'theme', theme)
 
 
 class UserRepository(AbstractRepository):

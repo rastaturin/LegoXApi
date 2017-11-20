@@ -59,7 +59,7 @@ class DynamoDb:
         )
 
     def del_item(self, query: Dict):
-        self.table.delete_item(query)
+        self.table.delete_item(Key=query)
 
     def scan(self):
         return self.table.scan()
