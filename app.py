@@ -9,6 +9,7 @@ from functools import wraps
 
 from chalicelib.Authorization import Authorization
 from chalicelib.exceptions import MainException, InvalidUsage, NotFoundException
+from chalicelib.mailer import MailGun
 from chalicelib.repository import UserRepository, AuthcodesRepository, SetsRepository, ThemesRepository, \
     MysetsRepository
 from chalicelib.services import UserService
@@ -17,7 +18,7 @@ app = Chalice(app_name='legoX')
 app.debug = True
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('./chalicelib/conf.ini')
 
 
 @app.route('/')
@@ -50,6 +51,7 @@ def require_user(f):
 
 
 @app.route('/login/{email}', methods=['GET'], cors=True)
+@error_handler
 def sessionkey(email):
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         raise InvalidUsage('Invalid Email')
@@ -61,7 +63,18 @@ def sessionkey(email):
         user = user_repo.reg_user(email)
     code = AuthcodesRepository().add_code(email)
 
-    return {'user': user, 'code': code}
+    link = config['web']['login'] % code
+    text = "Dear customer,<br>" \
+           'Please login to the LegoExchanger: <a href="%s">login</a>.' % link
+
+    mailer = MailGun(config['mailgun']['domain'], config['mailgun']['key'], 'LegoExchanger <alex@mrecorder.com>')
+    try:
+        sent = mailer.send_message(email, "Login to LegoExchanger", text)
+        result = sent.json()
+    except Exception as e:
+        result = str(e)
+
+    return {'_code': code, 'sent': result}
 
 
 @app.route('/sets/{year}/{theme}', methods=['GET'], cors=True)

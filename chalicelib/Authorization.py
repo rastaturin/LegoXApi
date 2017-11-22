@@ -28,6 +28,6 @@ class Authorization:
             raise NoToken("Authorization header must start with " + auth_type)
         if len(parts) > 1:
             return parts[1]
-        return ""
+        raise NoToken("Empty auth")
 
 

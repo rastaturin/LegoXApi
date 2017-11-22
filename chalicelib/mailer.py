@@ -4,12 +4,12 @@ from botocore.vendored import requests
 CHARSET = "UTF-8"
 
 
-class AbstractMailer:
+class MailerInterface:
     def send_message(self, email, subject, html):
         raise NotImplementedError("Should have implemented this")
 
 
-class SesMailer(AbstractMailer):
+class SesMailer(MailerInterface):
 
     def __init__(self, sender):
         self.sender = sender
@@ -38,19 +38,21 @@ class SesMailer(AbstractMailer):
         )
 
 
-class MailGun(AbstractMailer):
+class MailGun(MailerInterface):
     API = "https://api.mailgun.net/v3/%s/messages"
 
-    def __init__(self, domain, api_key, sender):
+    def __init__(self, domain, api_key, frm):
         self.domain = domain
         self.key = api_key
-        self.sender = sender
+        self.frm = frm
+        # self.sender = sender
 
     def send_message(self, email, subject, html):
         return requests.post(
             self.API % self.domain,
             auth=("api", self.key),
-            data={"from": self.sender,
+            data={
+                  "from": self.frm,
                   "to": [email],
                   "subject": subject,
                   "html": html}
