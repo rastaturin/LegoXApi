@@ -102,3 +102,4 @@ ENV/
 .ropeproject
 
 /chalicelib/conf.ini
+/.chalice/conf.ini

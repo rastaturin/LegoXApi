@@ -3,7 +3,6 @@ import configparser
 import time
 import re
 
-import boto3
 from chalice import Chalice, Response
 from functools import wraps
 
@@ -50,22 +49,69 @@ def require_user(f):
     return decorated
 
 
-@app.route('/login/{email}', methods=['GET'], cors=True)
+@app.route('/login/{email}/{password}', methods=['GET'], cors=True)
 @error_handler
-def sessionkey(email):
+def login(email, password):
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         raise InvalidUsage('Invalid Email')
-
+    result = 0
+    message = 'Login successfully.'
+    print("Email:", email, '; Password:', password)
     user_repo = UserRepository()
     try:
         user = user_repo.get({'email': email})
     except NotFoundException as e:
-        user = user_repo.reg_user(email)
-    code = AuthcodesRepository().add_code(email)
+        print("Unable to login. The email or password you provided is incorrect.")
+        result = 1
+        message = "Unable to login. The email or password you provided is incorrect."
+    return {'status': 0, 'message': message}
 
-    link = config['web']['login'] % code
+
+# Forgot password flow. The user will receive the temp password to login
+# and then able to update the password in thge console
+@app.route('/reset/{email}/{password}', methods=['GET'], cors=True)
+def reset_password(email):
+    return {'status': 0}
+
+
+# Update password feature
+@app.route('/profile/update/{email}/password/{password}/nickname/{nickname}/logo/{logo}', methods=['GET'], cors=True)
+def update_password(email, password, nickname, logo):
+    user_repo = UserRepository()
+    try:
+        user = user_repo.get({'email': email})
+        if password:
+            print('update password', password)
+            user_repo.update_profile(email, {'attribute': 'password', 'value': password})
+        if nickname:
+            print('update nickname', nickname)
+            user_repo.update_profile(email, {'attribute': 'nickname', 'value': nickname})
+        if logo:
+            print('update logo', logo)
+            user_repo.update_profile(email, {'attribute': 'logo', 'value': logo})
+    except NotFoundException as e:
+        return {'status': 1, 'message': 'Update failed'}
+    return {'status': 0, 'message': 'Update successfully'}
+
+
+@app.route('/register/{email}/{password}', methods=['GET'], cors=True)
+@error_handler
+def register(email, password):
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        raise InvalidUsage('Invalid Email')
+    print("Email", email)
+    user_repo = UserRepository()
+    message = ''
+    try:
+        user = user_repo.get({'email': email})
+        return {'sent': {}, 'email': email, 'message': 'The email has been registered.'}
+    except NotFoundException as e:
+        user = user_repo.reg_user(email, password)
+    # code = AuthcodesRepository().add_code(email)
+
+    link = config['web']['login']
     text = "Dear customer,<br>" \
-           'Please login to the LegoExchanger: <a href="%s">login</a>.' % link
+           'Please login with your registered email and password to the LegoExchanger: <a href="%s">login</a>.' % link
 
     mailer = MailGun(config['mailgun']['domain'], config['mailgun']['key'], 'LegoExchanger <alex@mrecorder.com>')
     try:
@@ -73,8 +119,8 @@ def sessionkey(email):
         result = sent.json()
     except Exception as e:
         result = str(e)
-
-    return {'_code': code, 'sent': result}
+    # return {'_code': code, 'sent': result}
+    return {'sent': result}
 
 
 @app.route('/sets/{year}/{theme}', methods=['GET'], cors=True)
@@ -174,3 +220,44 @@ def seach_sales():
         if key not in sales:
             sales[key] = SetsRepository().get({'key': key})
     return list(sales.values())
+
+
+@app.route('/icons', methods=['GET'], cors=True)
+def get_icons():
+    return {'icons':
+        [
+            'character.png',
+            'emoticon.png',
+            'emoticon_1.png',
+            'emoticon_2.png',
+            'emoticon_3.png',
+            'face.png',
+            'face_1.png',
+            'face_10.png',
+            'face_11.png',
+            'face_12.png',
+            'face_2.png',
+            'face_3.png',
+            'face_4.png',
+            'face_5.png',
+            'face_6.png',
+            'face_7.png',
+            'face_8.png',
+            'face_9.png',
+            'glasses.png',
+            'glasses_2.png',
+            'happy.png',
+            'happy_1.png',
+            'happy_2.png',
+            'interface.png',
+            'man.png',
+            'man_1.png',
+            'open.png',
+            'people.png',
+            'people_1.png',
+            'people_2.png',
+            'smiley.png',
+            'ufo.png'
+        ]
+    }
+

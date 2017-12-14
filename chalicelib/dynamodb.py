@@ -63,3 +63,26 @@ class DynamoDb:
 
     def scan(self):
         return self.table.scan()
+
+    def update_item(self, key_dict, update_dict):
+        """
+        Update an item.
+        PARAMS
+        @key_dict: dict containing the key name and val eg. {"uuid": item_uuid}
+        @update_dict: dict containing the key name and val of
+        attributes to be updated
+        eg. {"attribute": "processing_status", "value": "completed"}
+        """
+        table = self.table
+        update_expr = 'SET {} = :val1'.format(update_dict['attribute'])
+        response = table.update_item(
+            Key=key_dict,
+            UpdateExpression=update_expr,
+            ExpressionAttributeValues={
+                ':val1': update_dict['value']
+            }
+        )
+        if response['ResponseMetadata']['HTTPStatusCode'] == 200:
+            return True
+        else:
+            return False
