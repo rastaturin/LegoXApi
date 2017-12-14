@@ -57,14 +57,16 @@ def login(email, password):
     result = 0
     message = 'Login successfully.'
     print("Email:", email, '; Password:', password)
+    code = ''
     user_repo = UserRepository()
     try:
         user = user_repo.get({'email': email})
+        code = email
     except NotFoundException as e:
         print("Unable to login. The email or password you provided is incorrect.")
         result = 1
         message = "Unable to login. The email or password you provided is incorrect."
-    return {'status': 0, 'message': message}
+    return {'status': result, 'message': message, 'code': code}
 
 
 # Forgot password flow. The user will receive the temp password to login
@@ -97,17 +99,21 @@ def update_password(email, password, nickname, logo):
 @app.route('/register/{email}/{password}', methods=['GET'], cors=True)
 @error_handler
 def register(email, password):
+    status = 0
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         raise InvalidUsage('Invalid Email')
     print("Email", email)
     user_repo = UserRepository()
     message = ''
+    code = ''
     try:
         user = user_repo.get({'email': email})
-        return {'sent': {}, 'email': email, 'message': 'The email has been registered.'}
+        status = 1
+        return {'status': status, 'sent': {}, 'message': 'The email has been registered.'}
     except NotFoundException as e:
         user = user_repo.reg_user(email, password)
-    # code = AuthcodesRepository().add_code(email)
+        code = email
+        # code = AuthcodesRepository().add_code(email)
 
     link = config['web']['login']
     text = "Dear customer,<br>" \
@@ -119,8 +125,9 @@ def register(email, password):
         result = sent.json()
     except Exception as e:
         result = str(e)
+        status = 2
     # return {'_code': code, 'sent': result}
-    return {'sent': result}
+    return {'status': status, 'sent': result, 'code': code}
 
 
 @app.route('/sets/{year}/{theme}', methods=['GET'], cors=True)
