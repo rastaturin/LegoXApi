@@ -57,16 +57,21 @@ def login(email, password):
     result = 0
     message = 'Login successfully.'
     print("Email:", email, '; Password:', password)
-    code = ''
     user_repo = UserRepository()
     try:
         user = user_repo.get({'email': email})
-        code = email
+        if user['password'] != password:
+            result = 2
+            email = ''
+            message = "Unable to login. The email or password you provided is incorrect."
+        else:
+            code = AuthcodesRepository().add_code(email)
     except NotFoundException as e:
         print("Unable to login. The email or password you provided is incorrect.")
         result = 1
+        email = ''
         message = "Unable to login. The email or password you provided is incorrect."
-    return {'status': result, 'message': message, 'code': code}
+    return {'status': result, 'message': message, '_code': code, 'email': email}
 
 
 # Forgot password flow. The user will receive the temp password to login
@@ -105,15 +110,13 @@ def register(email, password):
     print("Email", email)
     user_repo = UserRepository()
     message = ''
-    code = ''
     try:
         user = user_repo.get({'email': email})
         status = 1
         return {'status': status, 'sent': {}, 'message': 'The email has been registered.'}
     except NotFoundException as e:
         user = user_repo.reg_user(email, password)
-        code = email
-        # code = AuthcodesRepository().add_code(email)
+        code = AuthcodesRepository().add_code(email)
 
     link = config['web']['login']
     text = "Dear customer,<br>" \
@@ -127,7 +130,7 @@ def register(email, password):
         result = str(e)
         status = 2
     # return {'_code': code, 'sent': result}
-    return {'status': status, 'sent': result, 'code': code}
+    return {'status': status, 'sent': result, '_code': code, 'email': email}
 
 
 @app.route('/sets/{year}/{theme}', methods=['GET'], cors=True)
