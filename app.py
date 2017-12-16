@@ -58,6 +58,7 @@ def login(email, password):
     message = 'Login successfully.'
     print("Email:", email, '; Password:', password)
     user_repo = UserRepository()
+    code = ''
     try:
         user = user_repo.get({'email': email})
         if user['password'] != password:
