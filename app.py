@@ -74,6 +74,17 @@ def login(email, password):
     return {'status': result, 'message': message, '_code': code, 'email': email}
 
 
+@app.route('/profile/get/{email}', methods=['GET'], cors=True)
+def get_profile(email):
+    user_repo = UserRepository()
+    status = 0
+    try:
+        user = user_repo.get({'email': email})
+    except NotFoundException as e:
+        status = 1
+    return {'status': status, 'profile': user}
+
+
 # Forgot password flow. The user will receive the temp password to login
 # and then able to update the password in thge console
 @app.route('/reset/{email}/{password}', methods=['GET'], cors=True)
