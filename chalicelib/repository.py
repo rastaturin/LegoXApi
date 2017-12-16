@@ -74,7 +74,7 @@ class UserRepository(AbstractRepository):
         return 'users'
 
     def reg_user(self, email, password):
-        return self.insert({'email': email, 'password': password, 'nickname': 'Anonymous', 'logo': 'face (2).png'})
+        return self.insert({'email': email, 'password': password, 'nickname': 'User', 'logo': 'face_2.png'})
 
     def update_profile(self, email, params):
         return self.db.update_item(
