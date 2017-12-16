@@ -41,6 +41,9 @@ class AbstractRepository:
             return []
         return result['Items']
 
+    def get_table(self):
+        return self.db.table
+
 
 class ThemesRepository(AbstractRepository):
     def get_table_name(self):
@@ -70,8 +73,14 @@ class UserRepository(AbstractRepository):
     def get_table_name(self):
         return 'users'
 
-    def reg_user(self, email):
-        return self.insert({'email': email})
+    def reg_user(self, email, password):
+        return self.insert({'email': email, 'password': password, 'nickname': 'User', 'logo': 'face_2.png'})
+
+    def update_profile(self, email, params):
+        return self.db.update_item(
+            {'email': email},
+            params
+        )
 
 
 class AuthcodesRepository(AbstractRepository):
