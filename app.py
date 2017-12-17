@@ -65,7 +65,7 @@ def sessionkey(email):
 
     link = config['web']['login'] % code
     text = "Dear customer,<br>" \
-           'Please login to the LegoExchanger: <a href="%s">login</a>.' % link
+           'Please login to the LegoExchanger: <a href="%s">login</a> or copy and paste a link to your browser.' % link
 
     mailer = MailGun(config['mailgun']['domain'], config['mailgun']['key'], 'LegoExchanger <alex@mrecorder.com>')
     try:
